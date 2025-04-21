@@ -59,4 +59,69 @@ check_button = tk.Button(root, text="Check URL", command=check_url)
 check_button.pack(pady=10)
 
 # Run the Tkinter event loop
-root.mainloop()
+root.mainloop()import re
+import requests
+import sys
+if len(sys.argv) > 1:
+    user_url = sys.argv[1]
+else:
+    user_url = input("Enter a URL to check: ").strip()
+# Keywords often found in phishing or suspicious URLs
+SUSPICIOUS_KEYWORDS = ['login', 'verify', 'update', 'bank', 'secure', 'paypal', 'account', 'signin']
+user_url = input("Enter a URL to check: ").strip()
+def is_valid_url(url):
+    """
+    Validates the format of a URL using a regex pattern.
+    """
+    pattern = re.compile(
+        r'^(https?://)?'              # optional http or https
+        r'(([A-Za-z0-9-]+\.)+[A-Za-z]{2,})'  # domain name
+        r'(:\d+)?'                    # optional port
+        r'(\/\S*)?$'                  # optional path
+    )
+    return re.match(pattern, url)
+
+def is_url_live(url):
+    """
+    Checks if the URL is reachable (status code 200).
+    """
+    try:
+        response = requests.get(url, timeout=5)
+        return response.status_code == 200
+    except requests.RequestException:
+        return False
+
+def check_suspicious(url):
+    """
+    Checks for the presence of suspicious keywords in the URL.
+    """
+    return any(keyword in url.lower() for keyword in SUSPICIOUS_KEYWORDS)
+
+def check_url(url):
+    """
+    Full URL check: format, availability, and keyword flag.
+    """
+    if not is_valid_url(url):
+        return {
+            "url": url,
+            "error": "Invalid URL format."
+        }
+
+    if not url.startswith("http"):
+        url = "http://" + url
+
+    live_status = is_url_live(url)
+    suspicious = check_suspicious(url)
+
+    return {
+        "url": url,
+        "is_live": live_status,
+        "suspicious_keywords_found": suspicious
+    }
+
+if __name__ == "__main__":
+    user_url = input("Enter a URL to check: ").strip()
+    result = check_url(user_url)
+    print("\n--- URL Check Result ---")
+    for key, value in result.items():
+        print(f"{key}: {value}")
