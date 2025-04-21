@@ -1,6 +1,10 @@
 import re
 import requests
-
+import sys
+if len(sys.argv) > 1:
+    user_url = sys.argv[1]
+else:
+    user_url = input("Enter a URL to check: ").strip()
 # Keywords often found in phishing or suspicious URLs
 SUSPICIOUS_KEYWORDS = ['login', 'verify', 'update', 'bank', 'secure', 'paypal', 'account', 'signin']
 user_url = input("Enter a URL to check: ").strip()
