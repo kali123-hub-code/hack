@@ -125,3 +125,65 @@ if __name__ == "__main__":
     print("\n--- URL Check Result ---")
     for key, value in result.items():
         print(f"{key}: {value}")
+import requests
+import tldextract
+
+# Optionally use Google's Safe Browsing API
+# You need to replace YOUR_API_KEY with a real key from: https://developers.google.com/safe-browsing/
+GOOGLE_API_KEY = 'YOUR_API_KEY'
+GOOGLE_API_URL = f'https://safebrowsing.googleapis.com/v4/threatMatches:find?key={GOOGLE_API_KEY}'
+
+def check_google_safe_browsing(url):
+    payload = {
+        "client": {
+            "clientId": "yourcompany",
+            "clientVersion": "1.0"
+        },
+        "threatInfo": {
+            "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
+            "platformTypes": ["ANY_PLATFORM"],
+            "threatEntryTypes": ["URL"],
+            "threatEntries": [{"url": url}]
+        }
+    }
+    try:
+        response = requests.post(GOOGLE_API_URL, json=payload)
+        if response.status_code == 200:
+            if response.json().get("matches"):
+                return True
+            else:
+                return False
+        else:
+            print("Error contacting Google Safe Browsing API.")
+            return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+def simple_heuristics(url):
+    suspicious_keywords = ['login', 'verify', 'update', 'secure', 'account', 'banking']
+    if len(url) > 75:
+        print("⚠️ Long URL detected")
+    if any(keyword in url.lower() for keyword in suspicious_keywords):
+        print("⚠️ Suspicious keyword in URL")
+    if '@' in url or '-' in tldextract.extract(url).domain:
+        print("⚠️ Unusual characters in domain")
+    
+def phishing_check(url):
+    print(f"\n🔎 Checking URL: {url}")
+    
+    print("\n[1] Running basic heuristics...")
+    simple_heuristics(url)
+    
+    print("\n[2] Checking Google Safe Browsing...")
+    result = check_google_safe_browsing(url)
+    if result:
+        print("❌ URL is flagged as dangerous by Google Safe Browsing.")
+    elif result is False:
+        print("✅ URL is not flagged by Google Safe Browsing.")
+    else:
+        print("⚠️ Could not determine status from Google API.")
+
+# Example usage
+user_url = input("Enter URL to check: ")
+phishing_check(user_url)
