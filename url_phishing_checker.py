@@ -59,7 +59,8 @@ check_button = tk.Button(root, text="Check URL", command=check_url)
 check_button.pack(pady=10)
 
 # Run the Tkinter event loop
-root.mainloop()import re
+root.mainloop()
+import re
 import requests
 import sys
 if len(sys.argv) > 1:
